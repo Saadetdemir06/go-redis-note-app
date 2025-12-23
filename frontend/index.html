@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Uygulaması | Pink Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+    <div class="max-w-2xl w-full">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-extrabold text-pink-600 drop-shadow-sm">✨ Not Defterim</h1>
+            <p class="text-pink-400 font-medium mt-2 text-lg">Kullanılabilirlik Testi: Not Uygulaması – Görev tamamlama ölçümleri</p>
+        </header>
+
+        <div class="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-pink-100 mb-10 transition-all hover:shadow-pink-200/50">
+            <h2 class="text-xl font-bold mb-6 text-pink-700 flex items-center">
+                <span class="mr-2">📝</span> Yeni Not Oluştur
+            </h2>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-pink-400 mb-1 ml-1">Başlık</label>
+                    <input type="text" id="baslik" placeholder="Not başlığını girin..." 
+                        class="w-full p-4 border-2 border-pink-50 rounded-2xl focus:border-pink-300 focus:ring-4 focus:ring-pink-100 outline-none transition-all bg-white/50">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-pink-400 mb-1 ml-1">İçerik</label>
+                    <textarea id="icerik" placeholder="Harika fikirlerini buraya yaz..." 
+                        class="w-full p-4 border-2 border-pink-50 rounded-2xl h-32 focus:border-pink-300 focus:ring-4 focus:ring-pink-100 outline-none transition-all bg-white/50 resize-none"></textarea>
+                </div>
+                <button onclick="notEkle()" 
+                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-pink-200 active:scale-95 flex items-center justify-center">
+                    <span>Kaydet</span>
+                </button>
+            </div>
+            <div id="statusMessage" class="mt-4 text-center hidden p-3 rounded-xl text-sm font-bold animate-pulse"></div>
+        </div>
+
+        <div class="space-y-6" id="notListesi">
+            <div class="flex items-center justify-between border-b-2 border-pink-200 pb-3">
+                <h3 class="font-bold text-pink-700 text-xl italic">Kayıtlı Notlar</h3>
+                <span class="bg-pink-200 text-pink-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest">Redis Live</span>
+            </div>
+            </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+
+        async function notEkle() {
+            const start = performance.now();
+            const baslik = document.getElementById('baslik').value;
+            const icerik = document.getElementById('icerik').value;
+            const status = document.getElementById('statusMessage');
+
+            if(!baslik || !icerik) return alert("Tatlım, alanları boş bırakamazsın! ✨");
+
+            try {
+                const response = await fetch(`${API_URL}/ekle`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ baslik, icerik })
+                });
+
+                if (response.ok) {
+                    const end = performance.now();
+                    const duration = (end - start).toFixed(2);
+                    
+                    status.innerText = `💖 Not Uçuruldu! (Hız: ${duration} ms)`;
+                    status.className = "mt-4 text-center p-3 rounded-xl text-sm font-bold bg-pink-100 text-pink-600 block";
+                    
+                    kartEkle(baslik, icerik);
+                    document.getElementById('baslik').value = "";
+                    document.getElementById('icerik').value = "";
+                    
+                    setTimeout(() => { status.classList.add('hidden'); }, 3000);
+                }
+            } catch (err) {
+                status.innerText = "❌ Sunucuya ulaşılamadı!";
+                status.className = "mt-4 text-center p-3 rounded-xl text-sm font-bold bg-red-100 text-red-600 block";
+            }
+        }
+
+        function kartEkle(b, i) {
+            const list = document.getElementById('notListesi');
+            const card = `
+                <div class="bg-white/90 p-6 rounded-3xl shadow-md border-r-8 border-pink-400 transform transition hover:-translate-y-1">
+                    <h4 class="font-black text-pink-600 text-lg mb-2 underline decoration-pink-200 decoration-4 underline-offset-4">${b}</h4>
+                    <p class="text-gray-600 leading-relaxed">${i}</p>
+                    <div class="mt-3 text-[10px] font-bold text-pink-300 uppercase tracking-tighter text-right italic">Stored in Redis</div>
+                </div>
+            `;
+            list.insertAdjacentHTML('afterbegin', card);
+        }
+    </script>
+</body>
+</html>
